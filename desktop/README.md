@@ -17,6 +17,10 @@
 
 The desktop app matches the iOS app as of November 2026. Like the iOS app, its interface is in Italian. Widgets, Live Activities, Shortcuts and Control Center controls are iOS-only.
 
+## Download
+
+Get the latest installer or portable `.exe` from [Releases](https://github.com/tommipisca/ExamsTrack/releases?q=desktop&expanded=true). The installer is not code-signed: if Windows SmartScreen warns you on first launch, click **More info → Run anyway**.
+
 ## Features
 
 - "Today" view with the tasks of all exams: overdue, today, the next 7 days and later
