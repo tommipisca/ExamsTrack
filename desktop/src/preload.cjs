@@ -32,6 +32,18 @@ contextBridge.exposeInMainWorld('api', {
   getDesktopSettings: invoke('app:getDesktopSettings'),
   setCloseToTray: invoke('app:setCloseToTray'),
   setOpenAtLogin: invoke('app:setOpenAtLogin'),
+  setAutoUpdate: invoke('app:setAutoUpdate'),
+  update: {
+    getState: invoke('update:getState'),
+    check: invoke('update:check'),
+    install: invoke('update:install'),
+    openReleasePage: invoke('update:openReleasePage'),
+    onState: (callback) => {
+      const listener = (_event, state) => callback(state);
+      ipcRenderer.on('update:state', listener);
+      return () => ipcRenderer.removeListener('update:state', listener);
+    },
+  },
   readyToQuit: () => ipcRenderer.send('app:readyToQuit'),
   onFocus: on('app:focus'),
   onHidden: on('app:hidden'),

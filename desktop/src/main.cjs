@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const updater = require('./updater.cjs');
 
 const APP_ID = 'com.Tommaso.ExamsTrack';
 const iconPath = path.join(__dirname, '..', 'build', 'icon.png');
@@ -17,7 +18,7 @@ let isQuitting = false;
 // MARK: Preferenze del processo principale
 
 const desktopSettingsPath = () => path.join(app.getPath('userData'), 'desktop-settings.json');
-let desktopSettings = { closeToTray: true };
+let desktopSettings = { closeToTray: true, autoUpdate: true };
 
 function loadDesktopSettings() {
   try {
@@ -196,6 +197,19 @@ function registerAppHandlers() {
   ipcMain.handle('app:setOpenAtLogin', (_e, value) => {
     app.setLoginItemSettings({ openAtLogin: Boolean(value), args: ['--hidden'] });
   });
+
+  ipcMain.handle('update:getState', () => updater.getState());
+  ipcMain.handle('update:check', () => updater.check());
+  ipcMain.handle('update:install', () => {
+    if (updater.getState().status === 'downloaded') quit({ restart: true });
+  });
+  ipcMain.handle('update:openReleasePage', () => updater.openReleasePage());
+  ipcMain.handle('app:setAutoUpdate', (_e, value) => {
+    desktopSettings.autoUpdate = Boolean(value);
+    saveDesktopSettings();
+    updater.schedule();
+    if (desktopSettings.autoUpdate) updater.check();
+  });
 }
 
 // MARK: Finestra e area di notifica
@@ -265,15 +279,19 @@ function createTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Apri ExamsTrack', click: showWindow },
     { label: 'Sincronizza ora', click: () => mainWindow?.webContents.send('sync:now') },
+    { label: 'Controlla aggiornamenti', click: () => updater.check() },
     { type: 'separator' },
     { label: 'Esci', click: quit },
   ]));
   tray.on('click', showWindow);
 }
 
-/** Uscita: aspetta che la finestra invii le ultime modifiche alla cartella (al massimo 15 secondi). */
+/**
+ * Uscita: aspetta che la finestra invii le ultime modifiche alla cartella (al massimo 15 secondi),
+ * poi installa l'aggiornamento scaricato, se c'è. Con `restart` riapre l'app aggiornata.
+ */
 let quitPromise = null;
-function quit() {
+function quit({ restart = false } = {}) {
   if (quitPromise) return quitPromise;
   isQuitting = true;
   quitPromise = new Promise((resolve) => {
@@ -284,7 +302,14 @@ function quit() {
       resolve();
     });
     mainWindow.webContents.send('app:beforeQuit');
-  }).then(() => app.exit(0));
+  }).then(() => {
+    if (updater.installOnQuit({ restart })) {
+      // quitAndInstall chiude l'app da solo; se l'installer non parte, si esce comunque.
+      setTimeout(() => app.exit(0), 10_000);
+    } else {
+      app.exit(0);
+    }
+  });
   return quitPromise;
 }
 
@@ -303,6 +328,12 @@ if (!app.requestSingleInstanceLock()) {
     registerAppHandlers();
     createWindow();
     createTray();
+    updater.init({
+      iconPath,
+      isAutoCheckEnabled: () => desktopSettings.autoUpdate,
+      onState: (state) => mainWindow?.webContents.send('update:state', state),
+      showWindow,
+    });
   });
 
   app.on('before-quit', (event) => {

@@ -19,6 +19,8 @@ const menuRoot = document.getElementById('menu-root');
 let store;
 let sync;
 let desktop = null;
+/** Stato degli aggiornamenti, inviato dal processo principale (vedi updater.cjs). */
+let update = null;
 let today = new Date();
 let now = new Date();
 
@@ -38,7 +40,7 @@ const ui = {
 const modals = [];
 
 const visibility = () => prefs.get('degreeVisibility');
-const context = () => ({ store, today, now, ui, prefs, sync, desktop, visibility: visibility(), study: ui.study });
+const context = () => ({ store, today, now, ui, prefs, sync, desktop, update, visibility: visibility(), study: ui.study });
 
 // MARK: Disegno
 
@@ -365,6 +367,9 @@ const actions = {
   },
   'import-backup': importBackup,
   'open-data-folder': () => api.openFolder(desktop.dataDir),
+  'check-update': () => api.update.check(),
+  'install-update': () => api.update.install(),
+  'open-release-page': () => api.update.openReleasePage(),
 
   // Finestre
   'modal-cancel': closeModal,
@@ -441,6 +446,10 @@ const changes = {
   },
   'close-to-tray': async (_, el) => {
     await api.setCloseToTray(el.checked);
+    desktop = await api.getDesktopSettings();
+  },
+  'auto-update': async (_, el) => {
+    await api.setAutoUpdate(el.checked);
     desktop = await api.getDesktopSettings();
   },
   'open-at-login': async (_, el) => {
@@ -716,6 +725,7 @@ function tick() {
 async function start() {
   try {
     desktop = await api.getDesktopSettings();
+    update = await api.update.getState();
     store = await ExamStore.open({ persistence: await makePersistence() });
   } catch (error) {
     view.innerHTML = `<div class="empty-state">${icon('alert')}<h3>Impossibile avviare ExamsTrack</h3><p>${esc(String(error))}</p></div>`;
@@ -746,6 +756,11 @@ async function start() {
     }
   });
   api.onFolderChanged(() => sync.sync(store));
+  api.update.onState((state) => {
+    update = state;
+    const busy = ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+    if (ui.tab === 'settings' && !busy) render();
+  });
   api.onSyncNow(() => sync.sync(store));
   api.onHidden(() => sync.sync(store));
   api.onBeforeQuit(async () => {

@@ -389,12 +389,39 @@ function select(change, options, selected) {
     `<option value="${esc(value)}" ${value === selected ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select>`;
 }
 
+/** Riga di stato e pulsanti della sezione Aggiornamenti. */
+function updateRows(update, now) {
+  const checked = update.lastCheck ? `Controllato ${esc(relativeLabel(new Date(update.lastCheck), now))}` : '';
+  const checkButton = (label = 'Controlla aggiornamenti') =>
+    `<div class="form-row buttons"><button class="btn" data-action="check-update">${icon('sync')} ${label}</button></div>`;
+  switch (update.status) {
+    case 'unsupported':
+      return '<div class="form-row muted">Gli aggiornamenti funzionano solo nell\'app installata, non con npm start.</div>';
+    case 'checking':
+      return '<div class="form-row"><span>Controllo in corso…</span><span class="spinner"></span></div>';
+    case 'downloading':
+      return `<div class="form-row"><span>Download della versione ${esc(update.version)}…</span><span class="muted">${update.percent}%</span></div>`;
+    case 'downloaded':
+      return `<div class="form-row"><span>Versione ${esc(update.version)} pronta<small class="muted">Si installa alla chiusura di ExamsTrack</small></span>
+        <button class="btn prominent" data-action="install-update">${icon('download')} Riavvia e aggiorna</button></div>`;
+    case 'available':
+      return `<div class="form-row"><span>Versione ${esc(update.version)} disponibile<small class="muted">La versione portable va scaricata a mano</small></span>
+        <button class="btn prominent" data-action="open-release-page">${icon('download')} Scarica</button></div>`;
+    case 'not-available':
+      return `<div class="form-row"><span>ExamsTrack è aggiornata</span><span class="muted">${checked}</span></div>` + checkButton();
+    case 'error':
+      return `<div class="form-row warning">${icon('alert')} ${esc(update.error)}</div>` + checkButton('Riprova');
+    default:
+      return checkButton();
+  }
+}
+
 function settingsSection(title, rows, footer = '') {
   return `<div class="group">${sectionHeader(title)}<div class="card form">${rows}</div>${footer ? `<p class="footer-note">${footer}</p>` : ''}</div>`;
 }
 
 export function settingsView(ctx) {
-  const { prefs, sync, desktop, now } = ctx;
+  const { prefs, sync, desktop, update, now } = ctx;
   const visibility = ctx.visibility;
   const sections = [];
 
@@ -463,10 +490,17 @@ export function settingsView(ctx) {
     </div>`,
     'Il backup è un file JSON compatibile con l\'app per iPhone e iPad: puoi importare qui un backup esportato dal telefono e viceversa.'));
 
+  if (desktop && update) {
+    sections.push(settingsSection('Aggiornamenti',
+      settingRow('Versione installata', `<span class="muted">${esc(desktop.version)}</span>`)
+      + updateRows(update, now)
+      + (update.status === 'unsupported' ? '' : settingRow('Controlla automaticamente', toggle(desktop.autoUpdate !== false, { change: 'auto-update' }))),
+      'ExamsTrack controlla su GitHub se c\'è una nuova versione all\'avvio e ogni 6 ore, e la scarica in background. I tuoi dati restano dove sono.'));
+  }
+
   if (desktop) {
     sections.push(settingsSection('Informazioni',
-      settingRow('Versione', `<span class="muted">${esc(desktop.version)}</span>`)
-      + settingRow('Dati su questo PC', `<button class="btn" data-action="open-data-folder">${icon('folder')} Apri cartella</button>`)));
+      settingRow('Dati su questo PC', `<button class="btn" data-action="open-data-folder">${icon('folder')} Apri cartella</button>`)));
   }
 
   return `<div class="page scroll" data-scroll="settings">${pageHeader('Impostazioni')}<div class="readable">${sections.join('')}</div></div>`;

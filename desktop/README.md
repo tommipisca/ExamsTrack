@@ -30,6 +30,14 @@ Get the latest installer or portable `.exe` from [Releases](https://github.com/t
 - Same "ink and highlighter" theme as the iOS app, with countdowns in Bahnschrift Condensed and exam names in Sitka
 - Runs in the notification area (tray) when the window is closed
 
+## Updates
+
+The installed app checks GitHub for a new version at startup and every 6 hours. When it finds one, it downloads it in the background and installs it when you quit ExamsTrack. You can also install it right away from **Impostazioni → Aggiornamenti → Riavvia e aggiorna**, or from the tray menu (**Controlla aggiornamenti**). Automatic checks can be turned off in the same section. Your data in `%APPDATA%\ExamsTrack` is not touched.
+
+The portable version cannot update itself: it shows a notification with a link to the new release.
+
+Versions up to 1.1.0 have no update check, so version 1.2.0 must be installed manually once.
+
 ## Sync with iPhone and iPad
 
 The desktop app reads and writes the same `ExamsTrack-sync.json` file as the iOS app, merged exam by exam.
@@ -50,6 +58,14 @@ npm start       # run the app
 npm test        # tests for the shared logic in src/core
 npm run dist    # NSIS installer + portable .exe in %LOCALAPPDATA%\ExamsTrack-build
 ```
+
+### Publishing a release
+
+1. Bump `version` in `package.json` (and `package-lock.json` with `npm install`), commit and push.
+2. Run `npm run dist`.
+3. Create a GitHub release tagged `desktop-v<version>` and attach `ExamsTrack-Setup-<version>.exe`, `ExamsTrack-portable-<version>.exe` and **`latest.yml`** from `%LOCALAPPDATA%\ExamsTrack-build`.
+
+The installed app reads `latest.yml` from the latest release (`releases/latest/download/latest.yml`), so every desktop release must include it and must be the repository's latest release. Releases that aren't for the desktop app must be marked as pre-releases.
 
 `npm run dist` writes outside the project folder on purpose. OneDrive locks files while electron-builder is running, which breaks the build when the project sits in a synced folder.
 
