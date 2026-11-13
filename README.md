@@ -61,22 +61,57 @@ ExamsTrack is built around the Italian university system (grades out of 30 with 
 
 ## Getting started
 
-Requirements: [xtool](https://github.com/xtool-org/xtool) set up with an Apple ID (a free account works) and an iPhone or iPad connected via USB.
+The only thing to install is [xtool](https://github.com/xtool-org/xtool), set up with `xtool setup` and an Apple ID. A free account works, but it needs the patched build described in [Patched xtool](#patched-xtool). You also need an iPhone or iPad connected via USB.
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/tommipisca/ExamsTrack.git
 cd ExamsTrack
 
-# 2. Build
-xtool dev build
+# 2. Build, add the App Intents metadata and install on the connected device
+scripts/install.sh
 
-# 3. Install the built app on the connected device
-xtool install --usb xtool/ExamsTrack.app
+# Or build without installing
+scripts/install.sh --no-install
 ```
 
+`scripts/install.sh` replaces `xtool dev`. It runs `xtool dev build`, then `scripts/appintents.sh`, then `xtool install`. On WSL it also points xtool to the Windows Apple Mobile Device service through the WSL gateway, if `USBMUXD_SOCKET_ADDRESS` is not set.
+
+### App Intents metadata
+
+Xcode generates `Metadata.appintents`, the file iOS reads to find an app's App Intents actions. xtool does not. Without it the app still runs, but these features stop working:
+- checking off tasks from widgets,
+- configurable widgets,
+- Control Center controls,
+- Shortcuts actions.
+
+`scripts/appintents.sh` generates the metadata for the app and for every extension listed in `xtool.yml`. It uses [re-appintentsmetadataprocessor](https://codeberg.org/viraptor/re-appintentsmetadataprocessor), an open-source reimplementation of Apple's tool. A prebuilt Linux x86_64 binary is included in [`tools/appintentsmetadataprocessor`](tools/appintentsmetadataprocessor), together with instructions for building it on other platforms.
+
+### Patched xtool
+
+The widgets read the app's data through an App Group. Upstream xtool marks the App Group capability as unavailable on free accounts (`isFree: false`) and drops the entitlement while signing. The widget then fails with `client is not entitled` and stays empty. Apple actually accepts one App Group on a free account, so [`tools/xtool/app-groups-free-account.patch`](tools/xtool/app-groups-free-account.patch) changes a single line in `Sources/XKit/DeveloperServices/App IDs/Entitlements/DeveloperServicesCapability.swift`:
+
+```diff
+ extension AppGroupEntitlement: EntitlementWithCapability {
+     var capability: DeveloperServicesCapability {
+-        DeveloperServicesCapability(.appGroups, isFree: false)
++        DeveloperServicesCapability(.appGroups, isFree: true)
+     }
+ }
+```
+
+The patch was used with xtool 1.21.0 and still applies to 1.24.0. To build a patched AppImage (requires Docker):
+
+```bash
+scripts/build-xtool.sh          # or: scripts/build-xtool.sh 1.24.0
+ln -sf "$PWD/xtool-1.21.0-appgroups.AppImage" ~/.local/bin/xtool
+xtool --version                 # 1.21.0-appgroups
+```
+
+With a paid Apple account the patch is not needed.
+
 > [!NOTE]
-> xtool does not generate the App Intents metadata (`Metadata.appintents`) that Xcode normally produces. Without it the app still runs, but checking off tasks from widgets and Control Center doesn't work, and Shortcuts actions may be missing. In my setup a small local script runs after `xtool dev build`, extracts the metadata into the app and widget bundles, and then installs the app.
+> xtool adds an `XTL-<team ID>.` prefix to bundle IDs when signing, which also renames the App Group. The app derives the real group name from its running bundle ID (see `ExamsCore/Sources/ExamsCore/AppGroup.swift`).
 
 With a free Apple account the installed app expires after 7 days and must be reinstalled; ExamsTrack shows the expiration date in its settings. The free account also limits the number of App IDs, so reuse the bundle IDs in `xtool.yml` (or change them to your own).
 
@@ -99,6 +134,13 @@ ExamsTrack/
 ├── ExamsCore/               # Shared logic: models, store, grade math, sync merge, planning
 │   ├── Sources/ExamsCore/
 │   └── Tests/ExamsCoreTests/
+├── scripts/
+│   ├── install.sh           # Build + App Intents metadata + install (use instead of `xtool dev`)
+│   ├── appintents.sh        # Generates Metadata.appintents for the app and the widget
+│   └── build-xtool.sh       # Builds xtool with the App Group patch
+├── tools/
+│   ├── appintentsmetadataprocessor/  # Prebuilt metadata generator (Linux x86_64)
+│   └── xtool/               # xtool patch for App Groups on free accounts
 ├── Package.swift            # SwiftPM manifest (app + widget targets)
 ├── xtool.yml                # xtool config: bundle IDs, plists, entitlements, icon
 ├── App-Info.plist           # App Info.plist
