@@ -5,7 +5,7 @@
 <h1 align="center">ExamsTrack</h1>
 
 <p align="center">
-  An iOS and iPadOS app for university students to plan exams, track study tasks and keep an eye on their grade average and expected graduation mark.
+  An iOS, iPadOS and Windows app for university students to plan exams, track study tasks and keep an eye on their grade average and expected graduation mark.
 </p>
 
 <p align="center">
@@ -13,11 +13,19 @@
   <img src="https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 6">
   <img src="https://img.shields.io/badge/SwiftUI-UI-1F4E79?style=flat-square" alt="SwiftUI">
   <img src="https://img.shields.io/badge/WidgetKit-Live_Activities-6C63FF?style=flat-square" alt="WidgetKit and Live Activities">
+  <img src="https://img.shields.io/badge/Windows-Electron-47848F?style=flat-square&logo=electron&logoColor=white" alt="Windows app built with Electron">
   <img src="https://img.shields.io/badge/Built_with-xtool-0EA5A4?style=flat-square" alt="Built with xtool">
   <img src="https://img.shields.io/badge/License-MIT-2E8B57?style=flat-square" alt="MIT License">
 </p>
 
 ExamsTrack is built around the Italian university system (grades out of 30 with *lode*, CFU credits, graduation mark out of 110), and its interface is in Italian. It is written entirely in SwiftUI and developed on Linux (Ubuntu on WSL) with [xtool](https://github.com/xtool-org/xtool), without Xcode or a Mac.
+
+| Version | Folder | Technologies |
+| --- | --- | --- |
+| iPhone and iPad | repository root | Swift, SwiftUI, WidgetKit, App Intents, xtool |
+| Windows | [`desktop/`](desktop) | Electron, JavaScript |
+
+Both versions read and write the same sync file, so data stays aligned across iPhone, iPad and PC. Setup instructions for the Windows app are in [`desktop/README.md`](desktop/README.md).
 
 ## Features
 
@@ -44,12 +52,13 @@ ExamsTrack is built around the Italian university system (grades out of 30 with 
 - Local JSON storage shared between app and widgets through an App Group
 - Sync between devices via a file in a user-chosen folder (e.g. iCloud Drive), merged exam by exam
 - Automatic daily backups plus manual export and import
+- The [Windows app](desktop) uses the same sync file, so PC, iPhone and iPad stay in sync
 
 ## Tech stack
 
 <p align="center">
   <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=swift,apple,linux,git" alt="Swift, Apple, Linux and Git">
+    <img src="https://skillicons.dev/icons?i=swift,apple,electron,js,linux,git" alt="Swift, Apple, Electron, JavaScript, Linux and Git">
   </a>
 </p>
 
@@ -58,6 +67,7 @@ ExamsTrack is built around the Italian university system (grades out of 30 with 
 - [Swift Charts](https://developer.apple.com/documentation/charts) for the average trend
 - [xtool](https://github.com/xtool-org/xtool) to build, sign and install on a device from Linux
 - Swift Package Manager, with the business logic in a separate, fully tested `ExamsCore` package
+- [Electron](https://www.electronjs.org) with plain HTML, CSS and JavaScript for the [Windows app](desktop), packaged with [electron-builder](https://www.electron.build)
 
 ## Getting started
 
@@ -142,6 +152,7 @@ ExamsTrack/
 │   ├── appintentsmetadataprocessor/  # Prebuilt metadata generator (Linux x86_64)
 │   └── xtool/               # xtool patch for App Groups on free accounts
 ├── Package.swift            # SwiftPM manifest (app + widget targets)
+├── desktop/                 # Windows app (Electron), see desktop/README.md
 ├── xtool.yml                # xtool config: bundle IDs, plists, entitlements, icon
 ├── App-Info.plist           # App Info.plist
 ├── Widget-Info.plist        # Widget extension Info.plist

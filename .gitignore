@@ -30,3 +30,7 @@ DerivedData/
 .netrc
 *.mobileprovision
 *.p12
+
+# Desktop app (Electron)
+desktop/node_modules/
+desktop/dist/

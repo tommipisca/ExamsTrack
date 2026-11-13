@@ -1,0 +1,50 @@
+{
+  "name": "examstrack-desktop",
+  "productName": "ExamsTrack",
+  "version": "1.1.0",
+  "description": "ExamsTrack per Windows: esami, piano di studio e carriera, sincronizzati con iPhone e iPad.",
+  "author": "Tommaso Piscaglia",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win -c.directories.output=%LOCALAPPDATA%/ExamsTrack-build"
+  },
+  "build": {
+    "appId": "com.Tommaso.ExamsTrack",
+    "productName": "ExamsTrack",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "ExamsTrack",
+      "artifactName": "ExamsTrack-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "ExamsTrack-portable-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.1",
+    "electron-builder": "^26.15.3"
+  }
+}
