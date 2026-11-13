@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/iOS-17%2B-0A84FF?style=flat-square&logo=apple&logoColor=white" alt="iOS 17+">
+  <img src="https://img.shields.io/badge/iOS-17%2B-0A84FF?style=flat-square" alt="iOS 17+">
   <img src="https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 6">
   <img src="https://img.shields.io/badge/SwiftUI-UI-1F4E79?style=flat-square" alt="SwiftUI">
   <img src="https://img.shields.io/badge/WidgetKit-Live_Activities-6C63FF?style=flat-square" alt="WidgetKit and Live Activities">
@@ -58,7 +58,7 @@ Both versions read and write the same sync file, so data stays aligned across iP
 
 <p align="center">
   <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=swift,apple,electron,js,linux,git" alt="Swift, Apple, Electron, JavaScript, Linux and Git">
+    <img src="https://skillicons.dev/icons?i=swift,electron,js,linux,git" alt="Swift, Electron, JavaScript, Linux and Git">
   </a>
 </p>
 
@@ -159,6 +159,16 @@ ExamsTrack/
 ├── App.entitlements         # App Group shared by app and widget
 └── AppIcon.png              # 1024×1024 app icon
 ```
+
+## Disclaimer
+
+ExamsTrack is an independent personal project. It is not affiliated with, endorsed by or sponsored by Apple Inc. or Microsoft Corporation. Apple, iPhone, iPad, iOS, iPadOS, iCloud, Xcode and Swift are trademarks of Apple Inc. Windows is a trademark of Microsoft Corporation.
+
+- **No Apple software is included.** This repository contains no Apple SDK, Xcode component or signed app. `xtool setup` builds the iOS SDK on your machine from an `Xcode.xip` that you download from Apple yourself. By downloading Xcode you accept Apple's license terms, including any limits on where the SDK may be used. Make sure your use complies with them.
+- **Apple developer services.** xtool talks to Apple's developer services the way Xcode does, and the [patch](tools/xtool/app-groups-free-account.patch) only asks those services for a capability that Apple then grants or refuses. You build, sign and install the app with your own Apple ID. You are responsible for complying with the Apple Developer Agreement and any other terms you have accepted.
+- **No app distribution.** No prebuilt or signed iOS app is distributed. Apps signed with a free account are meant to be installed on your own devices.
+- **Third-party tools.** [xtool](https://github.com/xtool-org/xtool) and [re-appintentsmetadataprocessor](https://codeberg.org/viraptor/re-appintentsmetadataprocessor) are independent projects released under the MIT license by their authors.
+- **No warranty.** The software is provided "as is", without warranty of any kind, as stated in the [license](LICENSE). Keep backups of your data.
 
 ## License
 

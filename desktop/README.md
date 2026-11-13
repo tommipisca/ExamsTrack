@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Windows-10%2B-0078D4?style=flat-square&logo=windows&logoColor=white" alt="Windows 10+">
+  <img src="https://img.shields.io/badge/Windows-10%2B-0078D4?style=flat-square" alt="Windows 10+">
   <img src="https://img.shields.io/badge/Electron-44-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron 44">
   <img src="https://img.shields.io/badge/JavaScript-no_framework-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript, no framework">
   <img src="https://img.shields.io/badge/License-MIT-2E8B57?style=flat-square" alt="MIT License">
@@ -65,6 +65,10 @@ desktop/
 
 > [!IMPORTANT]
 > `src/core` writes JSON byte for byte like Swift's `JSONEncoder`, so that merging converges on every device. Any change to the data format must be made both here and in `ExamsCore`, and stay compatible with existing files.
+
+## Disclaimer
+
+ExamsTrack is an independent personal project. It is not affiliated with, endorsed by or sponsored by Apple Inc. or Microsoft Corporation. Windows is a trademark of Microsoft Corporation. iPhone, iPad and iCloud are trademarks of Apple Inc. The app syncs through a folder that you choose, such as iCloud Drive, and does not use any Apple API. See the [main README](../README.md#disclaimer) for the full disclaimer.
 
 ## License
 
