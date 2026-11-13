@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>ExamsTrack</string>
+    <!-- L'app è in italiano: anche le frasi di Siri vanno lette come italiane. -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>it</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>it</string>
+    </array>
+    <!-- Link examstrack://…: li apre anche il controllo "Sessione di studio" del Centro di Controllo. -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.Tommaso.ExamsTrack</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>examstrack</string>
+            </array>
+        </dict>
+    </array>
+    <!-- Live Activity del giorno dell'esame (countdown all'inizio). -->
+    <key>NSSupportsLiveActivities</key>
+    <true/>
+</dict>
+</plist>

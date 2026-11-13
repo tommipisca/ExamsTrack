@@ -1,0 +1,11 @@
+version: 1
+bundleID: com.Tommaso.ExamsTrack
+product: ExamsTrack
+infoPath: App-Info.plist
+entitlementsPath: App.entitlements
+iconPath: AppIcon.png
+extensions:
+  - product: ExamsTrackWidget
+    bundleID: com.Tommaso.ExamsTrack.Widget
+    infoPath: Widget-Info.plist
+    entitlementsPath: App.entitlements

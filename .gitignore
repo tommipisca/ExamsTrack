@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# SwiftPM build output (root package and ExamsCore)
+.build/
+/Packages
+.swiftpm/
+Package.resolved
+
+# Xcode (in case the package is opened on a Mac)
+xcuserdata/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+
+# xtool: build output, signed .app bundles and temp files
+/xtool/
+*.ipa
+
+# Editor / language server state
+.bsp/
+.sourcekit-lsp/
+.vscode/
+.idea/
+
+# Local Claude Code settings
+.claude/
+
+# Credentials
+.netrc
+*.mobileprovision
+*.p12
