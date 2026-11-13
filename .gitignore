@@ -23,8 +23,13 @@ DerivedData/
 .vscode/
 .idea/
 
-# Local Claude Code settings
+# AI assistant files (Claude Code instructions, settings, plans and specs)
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
 .claude/
+.superpowers/
+docs/superpowers/
 
 # Credentials
 .netrc
