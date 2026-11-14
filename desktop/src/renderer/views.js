@@ -3,6 +3,7 @@
 import * as L from '../core/logic.js';
 import { dayDiff, dayKey, italianLong, italianShort, italianWeekday, relativeLabel } from '../core/calendar.js';
 import { REMINDER_OFFSETS } from '../core/notifications.js';
+import { widgetExamChoices } from '../core/widget.js';
 import { C, data, esc, examCard, upcomingRow, pastRow, rescheduleBanner, taskRow, emptyState, sectionHeader,
   segmented, toggle, gradeBadge, colorBar, degreeTag } from './components.js';
 import { icon, checkCircle } from './icons.js';
@@ -474,6 +475,26 @@ export function settingsView(ctx) {
     settingRow('Task in scadenza oggi', toggle(settings.dailyTaskSummary, { change: 'daily-summary' }))
     + settingRow('Orario delle notifiche', `<input type="time" value="${time}" data-change="notification-time">`),
     'Nei giorni in cui scadono dei task ricevi l\'elenco di quelli ancora da fare. Le notifiche arrivano mentre ExamsTrack è aperta, anche solo come icona nell\'area di notifica.'));
+
+  // Widget sul desktop
+  if (desktop?.widget) {
+    const config = desktop.widget;
+    const choices = widgetExamChoices(L.visible(ctx.store.exams, visibility), ctx.today);
+    // Un esame scelto e poi già sostenuto resta nell'elenco: il widget intanto mostra il prossimo.
+    const chosen = config.examID && !choices.some((exam) => exam.id === config.examID) ? ctx.store.exam(config.examID) : null;
+    const options = [['', 'Prossimo esame (automatico)'],
+      ...choices.map((exam) => [exam.id, exam.name]),
+      ...(chosen ? [[chosen.id, `${chosen.name} (non più in programma)`]] : [])];
+    sections.push(settingsSection('Widget sul desktop',
+      settingRow('Mostra il widget sul desktop', toggle(config.enabled, { change: 'widget-enabled' }))
+      + (config.enabled
+        ? settingRow('Esame', select('widget-exam', options, config.examID ?? ''))
+          + settingRow('Dimensione', select('widget-size', [['small', 'Piccola'], ['medium', 'Media'], ['large', 'Grande']], config.size ?? 'small'))
+          + settingRow('Blocca posizione', toggle(config.locked, { change: 'widget-locked' }), 'Il widget non si sposta più trascinandolo')
+          + settingRow('Mostra anche i task degli altri esami', toggle(config.includeOtherExams, { change: 'widget-other-tasks' }))
+        : ''),
+      'Come il widget di iPad: giorni che mancano, avanzamento e task da fare, e a destra i prossimi esami. Resta sul desktop sotto le altre finestre e anche con "Mostra desktop" (Win+D). Si sposta trascinandolo, finché non ne blocchi la posizione; clic destro per bloccarlo o nasconderlo. Si attiva e si blocca anche dal menu dell\'icona nell\'area di notifica, e resta visibile finché ExamsTrack è attiva.'));
+  }
 
   // Windows
   if (desktop) {

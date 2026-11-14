@@ -1,7 +1,7 @@
 {
   "name": "examstrack-desktop",
   "productName": "ExamsTrack",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "ExamsTrack per Windows: esami, piano di studio e carriera, sincronizzati con iPhone e iPad.",
   "author": "Tommaso Piscaglia",
   "license": "MIT",
@@ -50,7 +50,8 @@
     ]
   },
   "dependencies": {
-    "electron-updater": "^6.8.11"
+    "electron-updater": "^6.8.11",
+    "koffi": "^3.3.4"
   },
   "devDependencies": {
     "electron": "^44.7.1",

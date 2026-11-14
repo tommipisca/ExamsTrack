@@ -6,6 +6,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const updater = require('./updater.cjs');
+const widget = require('./widget.cjs');
 
 const APP_ID = 'com.Tommaso.ExamsTrack';
 const iconPath = path.join(__dirname, '..', 'build', 'icon.png');
@@ -18,11 +19,14 @@ let isQuitting = false;
 // MARK: Preferenze del processo principale
 
 const desktopSettingsPath = () => path.join(app.getPath('userData'), 'desktop-settings.json');
-let desktopSettings = { closeToTray: true, autoUpdate: true };
+/** Widget sul desktop: spento finché non lo si attiva; senza esame scelto segue il prossimo esame. */
+const WIDGET_DEFAULTS = { enabled: false, examID: null, includeOtherExams: false, size: 'small', locked: false, position: null };
+let desktopSettings = { closeToTray: true, autoUpdate: true, widget: { ...WIDGET_DEFAULTS } };
 
 function loadDesktopSettings() {
   try {
-    desktopSettings = { ...desktopSettings, ...JSON.parse(fs.readFileSync(desktopSettingsPath(), 'utf8')) };
+    const saved = JSON.parse(fs.readFileSync(desktopSettingsPath(), 'utf8'));
+    desktopSettings = { ...desktopSettings, ...saved, widget: { ...WIDGET_DEFAULTS, ...saved.widget } };
   } catch {
     // Primo avvio.
   }
@@ -198,6 +202,11 @@ function registerAppHandlers() {
     app.setLoginItemSettings({ openAtLogin: Boolean(value), args: ['--hidden'] });
   });
 
+  ipcMain.handle('widget:setConfig', (_e, change) => setWidgetConfig(change));
+  ipcMain.on('widget:update', (event, data) => {
+    if (event.sender === mainWindow?.webContents) widget.update(data);
+  });
+
   ipcMain.handle('update:getState', () => updater.getState());
   ipcMain.handle('update:check', () => updater.check());
   ipcMain.handle('update:install', () => {
@@ -210,6 +219,47 @@ function registerAppHandlers() {
     updater.schedule();
     if (desktopSettings.autoUpdate) updater.check();
   });
+}
+
+// MARK: Widget sul desktop
+
+/** Cambia le impostazioni del widget (dalle Impostazioni o dal menu dell'icona) e avvisa la finestra. */
+function setWidgetConfig(change) {
+  const allowed = {};
+  if ('enabled' in change) allowed.enabled = Boolean(change.enabled);
+  if ('examID' in change) allowed.examID = change.examID ? String(change.examID) : null;
+  if ('includeOtherExams' in change) allowed.includeOtherExams = Boolean(change.includeOtherExams);
+  if (['small', 'medium', 'large'].includes(change.size)) allowed.size = change.size;
+  if ('locked' in change) allowed.locked = Boolean(change.locked);
+  desktopSettings.widget = { ...desktopSettings.widget, ...allowed };
+  saveDesktopSettings();
+  widget.setSize(desktopSettings.widget.size);
+  widget.setVisible(desktopSettings.widget.enabled);
+  widget.refresh();
+  updateTrayMenu();
+  mainWindow?.webContents.send('app:desktopChanged');
+}
+
+function setupWidget() {
+  widget.init({
+    iconPath,
+    getPosition: () => desktopSettings.widget.position,
+    savePosition: (position) => {
+      desktopSettings.widget.position = position;
+      saveDesktopSettings();
+    },
+    isLocked: () => desktopSettings.widget.locked,
+    setLocked: (locked) => setWidgetConfig({ locked }),
+    open: (target) => {
+      const existed = Boolean(mainWindow);
+      showWindow();
+      if (existed) mainWindow.webContents.send('widget:open', target);
+    },
+    toggleTask: (examID, taskID) => mainWindow?.webContents.send('widget:toggleTask', { examID, taskID }),
+    hide: () => setWidgetConfig({ enabled: false }),
+  });
+  widget.setSize(desktopSettings.widget.size);
+  widget.setVisible(desktopSettings.widget.enabled);
 }
 
 // MARK: Finestra e area di notifica
@@ -270,20 +320,40 @@ function createWindow(show = !startHidden) {
   });
   mainWindow.on('closed', () => {
     mainWindow = null;
+    // Il widget è una finestra a parte: senza l'icona nell'area di notifica l'app si chiude comunque.
+    if (!desktopSettings.closeToTray) quit();
   });
 }
 
 function createTray() {
   tray = new Tray(nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 }));
   tray.setToolTip('ExamsTrack');
-  tray.setContextMenu(Menu.buildFromTemplate([
+  updateTrayMenu();
+  tray.on('click', showWindow);
+}
+
+function updateTrayMenu() {
+  tray?.setContextMenu(Menu.buildFromTemplate([
     { label: 'Apri ExamsTrack', click: showWindow },
     { label: 'Sincronizza ora', click: () => mainWindow?.webContents.send('sync:now') },
     { label: 'Controlla aggiornamenti', click: () => updater.check() },
     { type: 'separator' },
+    {
+      label: 'Widget sul desktop',
+      type: 'checkbox',
+      checked: desktopSettings.widget.enabled,
+      click: (item) => setWidgetConfig({ enabled: item.checked }),
+    },
+    {
+      label: 'Blocca posizione del widget',
+      type: 'checkbox',
+      checked: desktopSettings.widget.locked,
+      enabled: desktopSettings.widget.enabled,
+      click: (item) => setWidgetConfig({ locked: item.checked }),
+    },
+    { type: 'separator' },
     { label: 'Esci', click: quit },
   ]));
-  tray.on('click', showWindow);
 }
 
 /**
@@ -328,6 +398,7 @@ if (!app.requestSingleInstanceLock()) {
     registerAppHandlers();
     createWindow();
     createTray();
+    setupWidget();
     updater.init({
       iconPath,
       isAutoCheckEnabled: () => desktopSettings.autoUpdate,

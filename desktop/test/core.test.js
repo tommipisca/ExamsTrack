@@ -303,3 +303,50 @@ test('oggi: agenda di tutti gli esami, settimana e più avanti', () => {
   const suggestion = L.studySuggestion(exams, today);
   assert.equal(suggestion.taskTitle, 'Ritardo S');
 });
+
+// MARK: Widget sul desktop
+
+import { widgetSummary, widgetExamChoices } from '../src/core/widget.js';
+
+test('il widget mostra il prossimo esame, o quello scelto se è ancora da sostenere', () => {
+  const today = date(2026, 1, 5);
+  const first = exam({ name: 'Analisi', date: date(2026, 1, 10), colorIndex: 2 });
+  const second = exam({ name: 'Fisica', date: date(2026, 1, 20) });
+  const past = exam({ name: 'Chimica', date: date(2026, 1, 1) });
+  const unscheduled = exam({ name: 'Geometria', isScheduled: false });
+  const exams = [second, past, first, unscheduled];
+
+  const next = widgetSummary(exams, today);
+  assert.equal(next.name, 'Analisi');
+  assert.equal(next.daysRemaining, 5);
+  assert.equal(next.colorIndex, 2);
+  assert.deepEqual(next.followingExams.map((e) => e.name), ['Fisica']);
+
+  assert.equal(widgetSummary(exams, today, { focusedExamID: second.id }).name, 'Fisica');
+  // Già sostenuto o senza data: si torna al prossimo esame.
+  assert.equal(widgetSummary(exams, today, { focusedExamID: past.id }).name, 'Analisi');
+  assert.equal(widgetSummary(exams, today, { focusedExamID: unscheduled.id }).name, 'Analisi');
+  assert.equal(widgetSummary([past, unscheduled], today), null);
+  assert.deepEqual(widgetExamChoices(exams, today).map((e) => e.name), ['Analisi', 'Fisica']);
+});
+
+test('i task del widget: solo dell\'esame mostrato o di tutti, per scadenza, con quelli appena spuntati', () => {
+  const today = date(2026, 1, 5);
+  const late = L.makeTask({ title: 'Ripasso', dueDate: date(2026, 1, 3) });
+  const done = L.makeTask({ title: 'Fatto', dueDate: date(2026, 1, 4), isDone: true });
+  const later = L.makeTask({ title: 'Esercizi', dueDate: date(2026, 1, 8) });
+  const other = L.makeTask({ title: 'Formule', dueDate: date(2026, 1, 6) });
+  const first = exam({ name: 'Analisi', date: date(2026, 1, 10), tasks: [later, done, late] });
+  const second = exam({ name: 'Fisica', date: date(2026, 1, 20), tasks: [other] });
+
+  const own = widgetSummary([first, second], today);
+  assert.deepEqual(own.upcomingTasks.map((t) => t.title), ['Ripasso', 'Esercizi']);
+  assert.equal(own.upcomingTasks[0].isOverdue, true);
+  assert.equal(own.completedTasks, 1);
+  assert.equal(own.totalTasks, 3);
+
+  const all = widgetSummary([first, second], today, { tasksFromAllExams: true, recentlyCompleted: new Set([done.id]) });
+  assert.deepEqual(all.upcomingTasks.map((t) => t.title), ['Ripasso', 'Fatto', 'Formule', 'Esercizi']);
+  assert.equal(all.upcomingTasks[1].isDone, true);
+  assert.equal(all.upcomingTasks[2].examName, 'Fisica');
+});

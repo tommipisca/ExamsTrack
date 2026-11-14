@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/License-MIT-2E8B57?style=flat-square" alt="MIT License">
 </p>
 
-The desktop app matches the iOS app as of November 2026. Like the iOS app, its interface is in Italian. Widgets, Live Activities, Shortcuts and Control Center controls are iOS-only.
+The desktop app matches the iOS app as of November 2026. Like the iOS app, its interface is in Italian. Live Activities, Shortcuts and Control Center controls are iOS-only; the iPad "next exam" widget is available as a desktop widget.
 
 ## Download
 
@@ -29,6 +29,20 @@ Get the latest installer or portable `.exe` from [Releases](https://github.com/t
 - Career: weighted average, CFU, graduation mark estimate and "what if" simulator
 - Same "ink and highlighter" theme as the iOS app, with countdowns in Bahnschrift Condensed and exam names in Sitka
 - Runs in the notification area (tray) when the window is closed
+- Desktop widget, based on the extra large iPad widget (see below)
+
+## Desktop widget
+
+A widget for the Windows desktop, based on the extra large iPad widget. On the left: the next exam with countdown, date, progress ring and tasks to do. On the right: the following exams. It sits on the desktop below the other windows and stays visible with Show desktop (Win+D).
+
+- Turn it on in **Impostazioni → Widget sul desktop** or from the tray menu (**Widget sul desktop**). It's off by default.
+- **Esame**: the next exam (default) or a specific scheduled exam. If the chosen exam is already past, the widget shows the next one.
+- **Mostra anche i task degli altri esami**: the task list includes the tasks of all exams, not just the one shown.
+- **Dimensione**: small (default), medium or large. Text stays the same size; smaller widgets show fewer rows.
+- Drag it to move it, then lock it with **Blocca posizione**, from the settings, the tray menu or by right-clicking the widget.
+- Click a circle to check off a task, a task or an exam to open it in the app, anywhere else to open "Oggi".
+
+The widget is shown while ExamsTrack is running, even only in the notification area.
 
 ## Updates
 

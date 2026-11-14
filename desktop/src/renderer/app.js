@@ -3,6 +3,7 @@
 import * as L from '../core/logic.js';
 import { addDays, dayDiff, dayKey, fromDayKey, iso, isoOf, noon, startOfDay } from '../core/calendar.js';
 import { ExamStore, STORE_ERRORS, BackupError } from '../core/store.js';
+import { widgetSummary, WIDGET_RECENT_MS } from '../core/widget.js';
 import { prefs, makePersistence, SyncService, Notifier } from './services.js';
 import { TABS, todayView, examsView, careerView, settingsView, careerDegree, studyRemaining } from './views.js';
 import { renderModal, examFormModal, taskFormModal, plannerModal, plannerPreview, isFinalTestOf, quickTaskModal, studyModal, minutesLabel } from './modals.js';
@@ -61,6 +62,7 @@ function render() {
   restoreFocus(view, focus);
   attachChartHover(view);
   renderRail();
+  pushWidget();
 }
 
 function renderRail() {
@@ -452,6 +454,11 @@ const changes = {
     await api.setAutoUpdate(el.checked);
     desktop = await api.getDesktopSettings();
   },
+  'widget-enabled': (_, el) => setWidgetConfig({ enabled: el.checked }),
+  'widget-exam': (_, el) => setWidgetConfig({ examID: el.value || null }),
+  'widget-size': (_, el) => setWidgetConfig({ size: el.value }),
+  'widget-locked': (_, el) => setWidgetConfig({ locked: el.checked }),
+  'widget-other-tasks': (_, el) => setWidgetConfig({ includeOtherExams: el.checked }),
   'open-at-login': async (_, el) => {
     await api.setOpenAtLogin(el.checked);
     desktop = await api.getDesktopSettings();
@@ -540,6 +547,58 @@ function saveTaskForm(modal) {
     store.addTask(L.makeTask({ title, dueDate, subtasks }), modal.examID);
   }
   if (!store.lastError) closeModal();
+}
+
+// MARK: Widget sul desktop
+
+/** Task spuntati dal widget (id → fine), mostrati ancora barrati per qualche secondo come su iOS. */
+const widgetRecents = new Map();
+let widgetSent = '';
+
+/** Calcola cosa mostra il widget e lo invia, solo se è cambiato (vedi widget.cjs). */
+function pushWidget() {
+  if (!store || !desktop?.widget) return;
+  const current = Date.now();
+  for (const [id, until] of widgetRecents) if (until <= current) widgetRecents.delete(id);
+  const summary = widgetSummary(L.visible(store.exams, visibility()), new Date(current), {
+    focusedExamID: desktop.widget.examID,
+    tasksFromAllExams: desktop.widget.includeOtherExams,
+    recentlyCompleted: new Set(widgetRecents.keys()),
+  });
+  const data = { summary, showDegree: visibility() === 'both' };
+  const text = JSON.stringify(data);
+  if (text === widgetSent) return;
+  widgetSent = text;
+  api.widget.update(data);
+}
+
+function toggleFromWidget({ examID, taskID }) {
+  const task = store?.exam(examID)?.tasks.find((item) => item.id === taskID);
+  if (!task) return;
+  if (task.isDone) {
+    widgetRecents.delete(taskID);
+  } else {
+    widgetRecents.set(taskID, Date.now() + WIDGET_RECENT_MS);
+    setTimeout(pushWidget, WIDGET_RECENT_MS + 50);
+  }
+  store.toggleTask(taskID, examID);
+}
+
+function openFromWidget(target) {
+  closeMenu();
+  if (target?.examID && store?.exam(target.examID)) {
+    ui.tab = 'exams';
+    ui.examsSelected = target.examID;
+    render();
+  } else if (target?.tab) {
+    actions.tab({ value: target.tab });
+  }
+}
+
+async function setWidgetConfig(change) {
+  await api.widget.setConfig(change);
+  desktop = await api.getDesktopSettings();
+  render();
 }
 
 // MARK: Eventi
@@ -720,6 +779,7 @@ function tick() {
   const minuteChanged = Math.floor(previous / 60_000) !== Math.floor(now / 60_000);
   const busy = ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) || menuRoot.firstChild;
   if (dayChanged || (minuteChanged && !busy && view.querySelector('.precise'))) render();
+  pushWidget();
 }
 
 async function start() {
@@ -762,6 +822,14 @@ async function start() {
     if (ui.tab === 'settings' && !busy) render();
   });
   api.onSyncNow(() => sync.sync(store));
+  api.widget.onToggleTask(toggleFromWidget);
+  api.widget.onOpen(openFromWidget);
+  api.onDesktopChanged(async () => {
+    desktop = await api.getDesktopSettings();
+    const busy = ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+    if (ui.tab === 'settings' && !busy) render();
+    else pushWidget();
+  });
   api.onHidden(() => sync.sync(store));
   api.onBeforeQuit(async () => {
     clearTimeout(syncTimer);

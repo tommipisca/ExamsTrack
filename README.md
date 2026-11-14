@@ -53,6 +53,7 @@ Both versions read and write the same sync file, so data stays aligned across iP
 - Sync between devices via a file in a user-chosen folder (e.g. iCloud Drive), merged exam by exam
 - Automatic daily backups plus manual export and import
 - The [Windows app](desktop) uses the same sync file, so PC, iPhone and iPad stay in sync
+- On Windows, a desktop widget based on the extra large iPad widget shows the next exam (or a chosen one), its tasks and the following exams
 
 ## Tech stack
 

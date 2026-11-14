@@ -44,6 +44,13 @@ contextBridge.exposeInMainWorld('api', {
       return () => ipcRenderer.removeListener('update:state', listener);
     },
   },
+  widget: {
+    setConfig: invoke('widget:setConfig'),
+    update: (data) => ipcRenderer.send('widget:update', data),
+    onToggleTask: (callback) => ipcRenderer.on('widget:toggleTask', (_event, target) => callback(target)),
+    onOpen: (callback) => ipcRenderer.on('widget:open', (_event, target) => callback(target)),
+  },
+  onDesktopChanged: on('app:desktopChanged'),
   readyToQuit: () => ipcRenderer.send('app:readyToQuit'),
   onFocus: on('app:focus'),
   onHidden: on('app:hidden'),

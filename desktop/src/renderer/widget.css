@@ -1,0 +1,132 @@
+/* Widget sul desktop: come il widget extra large di iPad (ExtraLargeHomeWidgetView), nel tema
+   "inchiostro e evidenziatore". A sinistra il prossimo esame e i task da fare, a destra i prossimi esami. */
+
+:root {
+  --background: #0F1728;
+  --elevated: #1D2A42;
+  --stroke: #26324A;
+  --text: #ECE8DD;
+  --text-2: #93A0B8;
+  --accent: #8FB0FF;
+  --success: #5BD6A0;
+  --danger: #FF7D8E;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-serif: "Sitka Heading", "Sitka Text", Georgia, serif;
+  --font-countdown: "Bahnschrift", "Segoe UI Variable Display", sans-serif;
+  color-scheme: dark;
+
+  /* Grande: le misure del widget extra large di iPad. */
+  --pad-y: 20px; --pad-x: 22px; --col-gap: 24px; --gap: 14px;
+  --name: 17px; --number: 70px; --words: 45px; --unit: 15px; --ring: 62px;
+  --bar: 38px; --exam-gap: 12px;
+}
+
+/* Media e piccola: stesso testo, countdown, anello e margini più compatti. */
+:root[data-size="medium"] {
+  --pad-y: 16px; --pad-x: 18px; --col-gap: 20px; --gap: 11px;
+  --name: 16px; --number: 56px; --words: 38px; --unit: 14px; --ring: 54px;
+  --bar: 36px; --exam-gap: 10px;
+}
+
+:root[data-size="small"] {
+  --pad-y: 13px; --pad-x: 15px; --col-gap: 14px; --gap: 9px;
+  --name: 15px; --number: 46px; --words: 32px; --unit: 13px; --ring: 48px;
+  --bar: 34px; --exam-gap: 9px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--text);
+  font: 13px/1.35 var(--font);
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: var(--background);
+  border: 1px solid var(--stroke);
+  padding: var(--pad-y) var(--pad-x);
+  overflow: hidden;
+}
+
+.columns { display: flex; gap: var(--col-gap); height: 100%; }
+.column { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
+.vrule { width: 1px; flex: none; background: var(--stroke); }
+.divider { height: 1px; flex: none; background: var(--stroke); }
+
+/* Prossimo esame */
+
+.header { display: flex; align-items: flex-start; gap: 12px; }
+.header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.name {
+  font: 600 var(--name)/1.25 var(--font-serif);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.capsule {
+  flex: none; padding: 2px 6px; border-radius: 999px; background: var(--elevated);
+  color: var(--text-2); font-size: 12px; font-weight: 600;
+}
+.date { font-size: 12px; color: var(--text-2); }
+
+.countdown {
+  display: flex; align-items: baseline; gap: 4px; white-space: nowrap;
+  font-family: var(--font-countdown); font-weight: 700; font-stretch: 75%;
+  font-variation-settings: "wdth" 75, "wght" 700; font-variant-numeric: tabular-nums;
+}
+.countdown b { font-size: var(--number); line-height: 0.95; font-weight: inherit; }
+.countdown.words { font-size: var(--words); line-height: 1.05; }
+.countdown small { font: 600 var(--unit) var(--font); }
+
+.progress { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ring { position: relative; width: var(--ring); height: var(--ring); }
+.ring svg { display: block; width: 100%; height: 100%; }
+.ring span {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font: 700 12px var(--font); font-variant-numeric: tabular-nums;
+}
+.count { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* Elenchi */
+
+.list { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+.list.exams { gap: var(--exam-gap); }
+.list-title { flex: none; font-size: 12px; font-weight: 600; color: var(--text-2); }
+.note { font-size: 13px; color: var(--text-2); }
+.note.done { color: var(--success); font-weight: 500; }
+
+.task { display: flex; align-items: center; gap: 8px; min-width: 0; flex: none; cursor: pointer; }
+.task .toggle { width: 20px; height: 20px; flex: none; display: grid; place-items: center; }
+.task .check { width: 15px; height: 15px; }
+.task .title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.task.done .title { color: var(--text-2); text-decoration: line-through; }
+.task .exam { flex: 0 10 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; }
+.task .due { margin-left: auto; padding-left: 6px; flex: none; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.task .due.late { color: var(--danger); }
+.task:hover .title { text-decoration: underline; text-decoration-color: var(--text-2); }
+
+.exam-row { display: flex; align-items: flex-start; gap: 8px; flex: none; cursor: pointer; }
+.exam-row .bar { width: 4px; height: var(--bar); border-radius: 2px; flex: none; }
+.exam-row .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.exam-row .exam-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exam-row .exam-date { font-size: 12px; color: var(--text-2); }
+.exam-row .days { flex: none; padding-left: 6px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.exam-row:hover .exam-name { text-decoration: underline; text-decoration-color: var(--text-2); }
+.meter { height: 4px; border-radius: 2px; overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 2px; }
+
+/* Nessun esame */
+
+.empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.empty .icon { width: 26px; height: 26px; color: var(--accent); }
+.empty p { margin: 0; font-weight: 500; color: var(--text-2); }
